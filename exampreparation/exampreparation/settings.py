@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'preparation.apps.PreparationConfig',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
