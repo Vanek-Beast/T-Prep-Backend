@@ -13,8 +13,8 @@ def generate(content):
         if not line.strip():
             continue
 
-        # Убираем нумерацию
-        question = re.sub(r'^\d+[.)]\s*', '', line).strip()
+        # Убираем нумерацию и маркеры списка (-, *, •)
+        question = re.sub(r'^(?:\d+[.)]|\s*[-*•])\s*', '', line).strip()
 
         # Добавляем вопрос и перевёрнутый текст как "ответ"
         questions_dict[question] = question[::-1]
