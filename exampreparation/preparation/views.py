@@ -1,11 +1,13 @@
-from django.http import HttpResponseBadRequest
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import re
+from serializers import SubjectSerializer
+from models import Subject
 
 
-def generate(content):
+def generate(file):
+    content = file.read().decode('utf-8')
     # Словарь для хранения вопросов и ответов
     questions_dict = {}
 
@@ -26,19 +28,18 @@ def generate(content):
 class MobileApiView(APIView):
     def post(self, request):
         data = request.data
-
-        # Проверка на наличие всех необходимых полей
-        required_fields = ['user_id', 'subject_name', 'file_content', 'time']
-        missing_fields = [field for field in required_fields if field not in data]
-
-        if missing_fields:
-            return Response(
-                {"error": f"Missing fields: {', '.join(missing_fields)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         # Получаем содержимое файла и генерируем ответы
-        file_content = data.get('file_content')
-
-        return Response(generate(file_content), status=status.HTTP_200_OK)
+        uploaded_file = request.FILES.get('file')
+        if not uploaded_file:
+            return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
+        data['questions'] = generate(uploaded_file)
+        serializer = SubjectSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        post_new = Subject.objects.create(
+            user_id=data["user_id"],
+            name=data["subject_name"],
+            status=data["status"],
+            file=data["questions"]
+        )
+        return Response({"post": SubjectSerializer(post_new).data}, status=status.HTTP_200_OK)
 
