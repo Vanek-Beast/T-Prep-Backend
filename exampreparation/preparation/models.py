@@ -15,7 +15,7 @@ class Subject(models.Model):
     name = models.CharField(max_length=100)
     time = models.DateTimeField(auto_now=True)
     status = models.BooleanField(default=False)
-    file = models.FileField(upload_to='upldfile/')
+    file = models.JSONField()
 
     def __str__(self):
         return self.name
