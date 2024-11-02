@@ -13,4 +13,4 @@ services:
       PGDATA: C:/Users/Dmitry/PycharmProjects/preparationexam/exampreparation
       POSTGRES_INITDB_ARGS: "-A md5"
     ports:
-      - "54321:5432"
+      - "5432:5432"
