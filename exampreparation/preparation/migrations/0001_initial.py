@@ -27,8 +27,9 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=100)),
                 ('time', models.DateTimeField(auto_now=True)),
                 ('status', models.BooleanField(default=False)),
-                ('file', models.FileField(upload_to='upldfile/')),
-                ('user_id', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='preparation.user')),
+                ('questions', models.FileField(upload_to='upldfile/')),
+                # ('user_id', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='preparation.user')),
+                ('user_id', models.IntegerField())
             ],
         ),
     ]

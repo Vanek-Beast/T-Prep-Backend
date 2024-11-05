@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name='subject',
-            name='file',
+            name='questions',
             field=models.JSONField(),
         ),
     ]

@@ -1,9 +1,11 @@
+import json
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import re
-from serializers import SubjectSerializer
-from models import Subject
+from .serializers import SubjectSerializer
+from .models import Subject
 
 
 def generate(file):
@@ -22,7 +24,7 @@ def generate(file):
         # Добавляем вопрос и перевёрнутый текст как "ответ"
         questions_dict[question] = question[::-1]
 
-    return questions_dict
+    return json.dumps(questions_dict)
 
 
 class MobileApiView(APIView):
@@ -33,13 +35,13 @@ class MobileApiView(APIView):
         if not uploaded_file:
             return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
         data['questions'] = generate(uploaded_file)
+        print(data['questions'])
         serializer = SubjectSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         post_new = Subject.objects.create(
             user_id=data["user_id"],
-            name=data["subject_name"],
-            status=data["status"],
-            file=data["questions"]
+            name=data["name"],
+            questions=data["questions"]
         )
         return Response({"post": SubjectSerializer(post_new).data}, status=status.HTTP_200_OK)
 
