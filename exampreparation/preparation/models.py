@@ -11,11 +11,13 @@ class User(models.Model):
 
 
 class Subject(models.Model):
-    user_id = models.IntegerField()
+    # user_id = models.ForeignKey('User', on_delete=models.PROTECT)
+    user_id = models.IntegerField()  # использую id как простое число, чтобы протестировать запросы
+    # без учета регистрации пользователей
     name = models.CharField(max_length=100)
     time = models.DateTimeField(auto_now=True)
     status = models.BooleanField(default=False)
-    file = models.JSONField()
+    questions = models.JSONField()
 
     def __str__(self):
         return self.name
