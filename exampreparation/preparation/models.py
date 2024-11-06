@@ -11,7 +11,7 @@ class User(models.Model):
 
 
 class Subject(models.Model):
-    user_id = models.ForeignKey('User', on_delete=models.PROTECT)
+    user_id = models.IntegerField()
     name = models.CharField(max_length=100)
     time = models.DateTimeField(auto_now=True)
     status = models.BooleanField(default=False)
