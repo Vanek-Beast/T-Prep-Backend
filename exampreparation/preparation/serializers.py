@@ -3,7 +3,13 @@ from rest_framework.serializers import *
 from preparation.models import Subject
 
 
-class SubjectSerializer(ModelSerializer):
+class SubjectCreateSerializer(ModelSerializer):
     class Meta:
         model = Subject
-        fields = ("name", "id")
+        fields = "__all__"
+
+
+class SubjectListSerializer(ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = ['id', 'name']
