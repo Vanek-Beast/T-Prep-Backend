@@ -39,7 +39,7 @@ class SubjectCreateView(APIView):
         serializer = SubjectCreateSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"post": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({"id": serializer.data["id"]}, status=status.HTTP_201_CREATED)
 
 
 class SubjectListView(APIView):
