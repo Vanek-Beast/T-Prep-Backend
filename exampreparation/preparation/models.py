@@ -11,13 +11,17 @@ class User(models.Model):
 
 
 class Subject(models.Model):
-    # user_id = models.ForeignKey('User', on_delete=models.PROTECT)
-    user_id = models.IntegerField()  # использую id как простое число, чтобы протестировать запросы
-    # без учета регистрации пользователей
+    user_id = models.ForeignKey('User', on_delete=models.PROTECT)
     name = models.CharField(max_length=100)
     time = models.DateTimeField(auto_now=True)
     status = models.BooleanField(default=False)
-    questions = models.JSONField()
 
     def __str__(self):
         return self.name
+
+
+class Segment(models.Model):
+    questions = models.JSONField()
+    subject_id = models.ForeignKey('Subject', on_delete=models.PROTECT)
+    status_segment = models.IntegerField()
+    next_review_date = models.DateTimeField(auto_now=True)
