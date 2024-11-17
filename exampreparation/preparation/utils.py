@@ -1,10 +1,13 @@
+import json
+import re
+
 from langchain.chat_models import GigaChat
 from langchain.prompts import ChatPromptTemplate
-from config import api_key
+from .config import api_key
 from langchain_core.output_parsers import StrOutputParser
 
 
-# Основная функция для общения с моделью
+# Основная функция для получения ответов на вопросы
 def generate_answers(questions):
     answers = {}
     llm = GigaChat(
@@ -18,6 +21,7 @@ def generate_answers(questions):
                                               "Тебе будет дан вопрос, на который необходимо дать краткий и точный "
                                               "ответ, учитывая каждый пункт, указанный в вопросе."
                                               "Ты ДОЛЖЕН дать четкий ответ на вопрос."
+                                              "Если вопрос задан на английском языке, то и ответ давай на английском!"
                                               "Вопрос: {question}"
                                               "Ответ:")
     parser = StrOutputParser()
@@ -25,13 +29,23 @@ def generate_answers(questions):
     for question in questions:
         answer = llm_chain.invoke({"question": question})
         answers[question] = answer
-    return answers
+    return json.dumps(answers)
 
 
-if __name__ == "__main__":
-    questions = [
-        "Основные цели и методы государственного регулирования.",
-        "Теория общественного выбора. Парадокс Кондорсе и теорема невозможности К.Эрроу.",
-        "Макроэкономическое равновесие в модели «AD-AS»."
-    ]
-    print(generate_answers(questions).values())
+# Функция для получения вопросов из файла
+def get_questions(file):
+    content = file.read().decode('utf-8')
+    # Словарь для хранения вопросов и ответов
+    questions = []
+
+    for line in content.split("\n"):
+        # Пропускаем пустые строки
+        if not line.strip():
+            continue
+
+        # Убираем нумерацию и маркеры списка (-, *, •)
+        question = re.sub(r'^(?:\d+[.)]|\s*[-*•])\s*', '', line).strip()
+
+        questions.append(question)
+
+    return questions

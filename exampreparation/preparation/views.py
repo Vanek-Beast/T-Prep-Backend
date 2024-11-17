@@ -1,31 +1,10 @@
-import json
-
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import re
 from .serializers import SubjectCreateSerializer, SubjectListSerializer
 from .models import Subject
-
-
-def generate(file):
-    content = file.read().decode('utf-8')
-    # Словарь для хранения вопросов и ответов
-    questions_dict = {}
-
-    for line in content.split("\n"):
-        # Пропускаем пустые строки
-        if not line.strip():
-            continue
-
-        # Убираем нумерацию и маркеры списка (-, *, •)
-        question = re.sub(r'^(?:\d+[.)]|\s*[-*•])\s*', '', line).strip()
-
-        # Добавляем вопрос и перевёрнутый текст как "ответ"
-        questions_dict[question] = question[::-1]
-
-    return json.dumps(questions_dict)
+from .utils import *
 
 
 class SubjectCreateView(APIView):
@@ -35,11 +14,11 @@ class SubjectCreateView(APIView):
         uploaded_file = request.FILES.get('file')
         if not uploaded_file:
             return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
-        data['questions'] = generate(uploaded_file)
+        data['questions'] = generate_answers(get_questions(uploaded_file))
         serializer = SubjectCreateSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"id": serializer.data["id"]}, status=status.HTTP_201_CREATED)
+        Response({"id": serializer.data["id"]}, status=status.HTTP_201_CREATED)
 
 
 class SubjectListView(APIView):
