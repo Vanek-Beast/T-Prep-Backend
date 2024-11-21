@@ -1,5 +1,3 @@
-import json
-
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
@@ -7,6 +5,7 @@ from rest_framework.views import APIView
 import re
 from .serializers import *
 from .models import *
+from .utils import *
 
 
 def generate(file):
@@ -36,7 +35,7 @@ class SubjectCreateView(APIView):
         if not uploaded_file:
             return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
-        questions = generate(uploaded_file)
+        questions = generate_answers(get_questions(uploaded_file))
         questions_dict = json.loads(questions)
 
         data_subject = {"user_id": data["user_id"], "name": data["name"]}
@@ -52,9 +51,10 @@ class SubjectCreateView(APIView):
             serializer_segment = SegmentCreateSerializer(data=data_segment)
             serializer_segment.is_valid(raise_exception=True)
             serializer_segment.save()
-
         return Response({"id": serializer_subject.data["id"], "name": serializer_subject.data["name"]},
                         status=status.HTTP_201_CREATED)
+
+
 
 
 class SubjectListView(APIView):
