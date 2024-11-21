@@ -17,7 +17,7 @@ Including another URLconf
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
-from preparation.views import SubjectListView, SubjectDetailView, SubjectCreateView
+from preparation.views import *
 
 from exampreparation import settings
 
@@ -27,6 +27,8 @@ urlpatterns = [
     path('api/v1/users/<int:user_id>/subjects/', SubjectListView.as_view(), name='subject-list'),
     path('api/v1/users/<int:user_id>/subjects/create/', SubjectCreateView.as_view(), name='subject-create'),
     path('api/v1/users/<int:user_id>/subjects/<int:subject_id>/', SubjectDetailView.as_view(), name='subject-detail'),
+    path('api/v1/users/subjects/<int:subject_id>/segments', SegmentListView.as_view(), name='segment-list'),
+    path('api/v1/users/<str:user_name>/<str:user_password>/user/create/', UserCreateView.as_view(), name='subject-create'),
 ]
 
 if settings.DEBUG:
