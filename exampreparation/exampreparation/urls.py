@@ -27,7 +27,7 @@ urlpatterns = [
     path('api/v1/users/<int:user_id>/subjects/', SubjectListView.as_view(), name='subject-list'),
     path('api/v1/users/<int:user_id>/subjects/create/', SubjectCreateView.as_view(), name='subject-create'),
     path('api/v1/users/<int:user_id>/subjects/<int:subject_id>/', SubjectDetailView.as_view(), name='subject-detail'),
-    path('api/v1/users/subjects/<int:subject_id>/segments', SegmentListView.as_view(), name='segment-list'),
+    path('api/v1/users/subjects/<int:subject_id>/segments/', SegmentListView.as_view(), name='segment-list'),
     path('api/v1/users/<int:user_id>/subjects/delete/<int:subject_id>/', SubjectDeleteView.as_view(), name='subject-create'),
 ]
 
