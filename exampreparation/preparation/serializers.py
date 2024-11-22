@@ -37,3 +37,9 @@ class SegmentUpdateSerializer(ModelSerializer):
     class Meta:
         model = Segment
         fields = ['id', 'status_segment', 'next_review_date']
+
+
+class SegmentDeleteSerializer(ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = "__all__"
