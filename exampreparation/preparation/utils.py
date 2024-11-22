@@ -1,9 +1,11 @@
 import json
 import re
-
-from langchain.chat_models import GigaChat
+import numpy as np
+import pytesseract
+import cv2
+from langchain_community.chat_models import GigaChat
 from langchain.prompts import ChatPromptTemplate
-from .config import api_key
+from config import api_key
 from langchain_core.output_parsers import StrOutputParser
 
 
@@ -32,10 +34,14 @@ def generate_answers(questions):
     return json.dumps(answers)
 
 
+# Функция для получения содержимого файла из байтов
+def get_content(file):
+    return file.read().decode('utf-8')
+
+
 # Функция для получения вопросов из файла
-def get_questions(file):
-    content = file.read().decode('utf-8')
-    # Словарь для хранения вопросов и ответов
+def get_questions(content):
+    # Список для хранения вопросов
     questions = []
 
     for line in content.split("\n"):
@@ -49,3 +55,16 @@ def get_questions(file):
         questions.append(question)
 
     return questions
+
+
+def get_text_from_img(img):
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    # Декодируем байтовое содержимое в изображение
+    file_bytes = np.frombuffer(img, np.uint8)
+    image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+
+    # Преобразование в оттенки серого
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Применение OCR
+    text = pytesseract.image_to_string(gray, lang='rus+eng')
+    return text

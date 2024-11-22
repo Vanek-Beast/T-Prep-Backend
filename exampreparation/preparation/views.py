@@ -2,29 +2,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import re
 from .serializers import *
 from .models import *
 from .utils import *
-
-
-def generate(file):
-    content = file.read().decode('utf-8')
-    # Словарь для хранения вопросов и ответов
-    questions_dict = {}
-
-    for line in content.split("\n"):
-        # Пропускаем пустые строки
-        if not line.strip():
-            continue
-
-        # Убираем нумерацию и маркеры списка (-, *, •)
-        question = re.sub(r'^(?:\d+[.)]|\s*[-*•])\s*', '', line).strip()
-
-        # Добавляем вопрос и перевёрнутый текст как "ответ"
-        questions_dict[question] = question[::-1]
-
-    return json.dumps(questions_dict)
 
 
 class SubjectCreateView(APIView):
@@ -89,14 +69,14 @@ class UserCreateView(APIView):
         return Response({"id": serializer.data["id"]}, status=status.HTTP_201_CREATED)
 
 
-class SegmentUpdateView(APIView):
+"""class SegmentUpdateView(APIView):
     def patch(self, request, segment_id):
         segment = get_object_or_404(Segment, id=segment_id)
         serializer = SegmentUpdateSerializer(segment, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return JsonResponse(code=201, data=serializer.data)
-        return JsonResponse(code=400, data="wrong parameters")
+        return JsonResponse(code=400, data="wrong parameters")"""
 
 
 class SubjectDeleteView(APIView):
