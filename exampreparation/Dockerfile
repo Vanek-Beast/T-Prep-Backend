@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
     tesseract-ocr-rus \
     libtesseract-dev \
     libleptonica-dev \
+    libgl1 \
+    libglib2.0-0 \
     && apt-get clean
 
 # Установка пакетов для проекта

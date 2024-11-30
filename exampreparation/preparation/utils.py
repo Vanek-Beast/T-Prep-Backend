@@ -1,11 +1,10 @@
-import json
 import re
 import numpy as np
 import pytesseract
 import cv2
 from langchain_community.chat_models import GigaChat
 from langchain.prompts import ChatPromptTemplate
-from config import api_key
+from .config import api_key
 from langchain_core.output_parsers import StrOutputParser
 from docx import Document
 from io import BytesIO
@@ -34,12 +33,12 @@ def generate_answers(questions):
     for question in questions:
         answer = llm_chain.invoke({"question": question})
         answers[question] = answer
-    return json.dumps(answers)
+    return answers
 
 
 # Функция для получения текста из txt файла
 def get_text_from_txt(file_content):
-    return file_content.read().decode('utf-8')
+    return file_content.decode('utf-8')
 
 
 # Функция для получения вопросов из файла
