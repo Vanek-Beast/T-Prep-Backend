@@ -1,4 +1,5 @@
 import re
+import random
 import numpy as np
 import pytesseract
 import cv2
@@ -98,3 +99,23 @@ def get_text_from_pdf(file_content):
         all_text.append(page.extract_text())
 
     return "\n".join(all_text)
+
+
+def generate_salt():
+    alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    chars = []
+
+    for i in range(16):
+        chars.append(random.choice(alphabet))
+
+    return "".join(chars)
+
+
+def check_password(password):
+    val = True
+    if len(password) < 8 or len(password) > 24:
+        val = False
+    elif set('[~!@#$%^&*()_+{}":;\']+$').intersection(password):
+        val = False
+
+    return val
