@@ -43,3 +43,9 @@ class SegmentDeleteSerializer(ModelSerializer):
     class Meta:
         model = Subject
         fields = "__all__"
+
+
+class UserGetSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"

@@ -1,4 +1,5 @@
 import json
+import hashlib
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
@@ -69,24 +70,54 @@ class SegmentListView(APIView):
 
 
 class UserCreateView(APIView):
-    def post(self, request, user_name, user_password):
+    def post(self, request):
         data = request.data
-        data["user_name"] = user_name
-        data["user_password"] = user_password
-        serializer = UserCreateSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"id": serializer.data["id"]}, status=status.HTTP_201_CREATED)
+        user = User.objects.filter(user_name=data['user_name']).exists()
+        if not user:
+            salt = generate_salt()
+            password = data['user_password']
+            if check_password(password):
+                password = hashlib.sha512(password.encode() + salt.encode()).hexdigest()
+                print(password)
+                data_user = {"user_name": data['user_name'], "user_password": str(password), "salt": salt}
+                serializer = UserCreateSerializer(data=data_user)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response({"id": serializer.data["id"]}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({"Error": "Пароль не соответствует требованиям!"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"Error": "Пользователь с таким именем уже существует!"}, status=status.HTTP_409_CONFLICT)
 
 
-"""class SegmentUpdateView(APIView):
-    def patch(self, request, segment_id):
-        segment = get_object_or_404(Segment, id=segment_id)
-        serializer = SegmentUpdateSerializer(segment, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(code=201, data=serializer.data)
-        return JsonResponse(code=400, data="wrong parameters")"""
+class UserAuthView(APIView):
+    def get(self, request):
+        data = request.data
+        user = User.objects.filter(user_name=data['user_name']).exists()
+        if user:
+            user = User.objects.filter(user_name=data['user_name'])
+            serializer = UserGetSerializer(user, many=True)
+            salt = serializer.data[0]['salt']
+            password = data['user_password']
+            hash_password = str(hashlib.sha512(password.encode() + salt.encode()).hexdigest())
+            if hash_password == serializer.data[0]['user_password']:
+                request.session['user'] = serializer.data
+                return Response(
+                    {"id": request.session['user'][0]['id'], "login": request.session['user'][0]['user_name']},
+                    status=status.HTTP_200_OK)
+            else:
+                return Response({"Error": "Пароль неверный!"}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response({"Error": "Такого пользователя нет!"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UserLogoutView(APIView):
+    def post(self, request):
+        if 'user' in request.session:
+            del request.session['user']
+            return Response({"Answer": "Вы вышли из систесы!"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"Error": "Вы еще не авторизовались!"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class SubjectDeleteView(APIView):
