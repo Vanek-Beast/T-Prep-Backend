@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     libleptonica-dev \
     libgl1 \
     libglib2.0-0 \
+    antiword \
     && apt-get clean
 
 # Установка пакетов для проекта

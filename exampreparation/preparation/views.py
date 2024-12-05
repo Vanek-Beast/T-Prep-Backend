@@ -19,7 +19,7 @@ class SubjectCreateView(APIView):
             return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Проверяем расширение файла
-        allowed_extensions = {'.txt', '.docx', '.pdf', '.png', '.jpg', 'jpeg'}  # Разрешенные расширения
+        allowed_extensions = {'.txt', '.docx', '.doc', '.pdf', '.png', '.jpg', 'jpeg'}  # Разрешенные расширения
         file_extension = os.path.splitext(uploaded_file.name)[1].lower()
         if file_extension not in allowed_extensions:
             return Response(
@@ -30,11 +30,13 @@ class SubjectCreateView(APIView):
                 text = get_text_from_txt(uploaded_file.read())
             case '.docx':
                 text = get_text_from_docx(uploaded_file.read())
+            case '.doc':
+                text = get_text_from_doc(uploaded_file.read())
             case '.pdf':
                 text = get_text_from_pdf(uploaded_file.read())
             case _:
                 text = get_text_from_img(uploaded_file.read())
-        questions = generate_answers(get_questions(text))
+        questions = generate_answers(extract_questions(text))
 
         data_subject = {"user_id": data["user_id"], "name": data["name"]}
         serializer_subject = SubjectCreateSerializer(data=data_subject)
@@ -115,7 +117,7 @@ class UserLogoutView(APIView):
     def post(self, request):
         if 'user' in request.session:
             del request.session['user']
-            return Response({"Answer": "Вы вышли из систесы!"}, status=status.HTTP_200_OK)
+            return Response({"Answer": "Вы вышли из системы!"}, status=status.HTTP_200_OK)
         else:
             return Response({"Error": "Вы еще не авторизовались!"}, status=status.HTTP_404_NOT_FOUND)
 
