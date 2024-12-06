@@ -71,6 +71,20 @@ class SegmentListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class SegmentUpdateStatusView(APIView):
+    def put(self, request, segment_id):
+        segments = Segment.objects.get(id=segment_id)
+        serializer = SegmentListSerializer(segments)
+        status_segment = serializer.data['status_segment']
+        status_segment = status_segment + 1
+        data_segment = {"status_segment": status_segment}
+        serializer_save = SegmentListSerializer(segments, data=data_segment, partial=True)
+        if serializer_save.is_valid():
+            serializer_save.save()
+            return Response(serializer_save.data, status=status.HTTP_200_OK)
+        return Response({"error": "Недопустимый параметр!"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class UserCreateView(APIView):
     def post(self, request):
         data = request.data
@@ -81,7 +95,8 @@ class UserCreateView(APIView):
             if check_password(password):
                 password = hashlib.sha512(password.encode() + salt.encode()).hexdigest()
                 print(password)
-                data_user = {"user_name": data['user_name'], "user_password": str(password), "salt": salt, "fcm_token": "fcmtoken"}
+                data_user = {"user_name": data['user_name'], "user_password": str(password), "salt": salt,
+                             "fcm_token": "fcmtoken"}
                 serializer = UserCreateSerializer(data=data_user)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
