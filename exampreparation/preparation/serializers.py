@@ -49,3 +49,4 @@ class UserGetSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = "__all__"
+
