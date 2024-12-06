@@ -81,7 +81,7 @@ class UserCreateView(APIView):
             if check_password(password):
                 password = hashlib.sha512(password.encode() + salt.encode()).hexdigest()
                 print(password)
-                data_user = {"user_name": data['user_name'], "user_password": str(password), "salt": salt}
+                data_user = {"user_name": data['user_name'], "user_password": str(password), "salt": salt, "fcm_token": "fcmtoken"}
                 serializer = UserCreateSerializer(data=data_user)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
@@ -93,14 +93,13 @@ class UserCreateView(APIView):
 
 
 class UserAuthView(APIView):
-    def get(self, request):
-        data = request.data
-        user = User.objects.filter(user_name=data['user_name']).exists()
+    def get(self, request, user_name, user_password):
+        user = User.objects.filter(user_name=user_name).exists()
         if user:
-            user = User.objects.filter(user_name=data['user_name'])
+            user = User.objects.filter(user_name=user_name)
             serializer = UserGetSerializer(user, many=True)
             salt = serializer.data[0]['salt']
-            password = data['user_password']
+            password = user_password
             hash_password = str(hashlib.sha512(password.encode() + salt.encode()).hexdigest())
             if hash_password == serializer.data[0]['user_password']:
                 request.session['user'] = serializer.data
