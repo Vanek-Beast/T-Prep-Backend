@@ -29,7 +29,7 @@ urlpatterns = [
     path('api/v1/users/subjects/<int:subject_id>/segments/', SegmentListView.as_view(), name='segment-list'),
     path('api/v1/users/<int:user_id>/subjects/delete/<int:subject_id>/', SubjectDeleteView.as_view(), name='subject-delete'),
     path('api/v1/users/register/', UserCreateView.as_view(), name='user-create'),
-    path('api/v1/users/auth/', UserAuthView.as_view(), name='user-auth'),
+    path('api/v1/users/auth/<str:user_name>/<str:user_password>/', UserAuthView.as_view(), name='user-auth'),
     path('api/v1/users/logout/', UserLogoutView.as_view(), name='user-auth')
 ]
 
