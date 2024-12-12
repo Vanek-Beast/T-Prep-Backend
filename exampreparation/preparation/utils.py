@@ -24,13 +24,12 @@ def generate_answers(questions):
         verify_ssl_certs=False,
         streaming=False,
     )
-    prompt = ChatPromptTemplate.from_template("Ты - эксперт по подготовке к экзаменам. "
-                                              "Тебе будет дан вопрос, на который необходимо дать краткий и точный "
-                                              "ответ, учитывая каждый пункт, указанный в вопросе."
-                                              "Ты ДОЛЖЕН дать четкий ответ на вопрос."
-                                              "Если вопрос задан на английском языке, то и ответ давай на английском!"
-                                              "Вопрос: {question}"
-                                              "Ответ:")
+    prompt = ChatPromptTemplate.from_template('''Ты - эксперт по подготовке к экзаменам. 
+                                              Тебе будет дан вопрос, на который необходимо дать краткий и точный 
+                                              ответ, учитывая каждый пункт, указанный в вопросе.
+                                              Ты ДОЛЖЕН дать четкий ответ на вопрос.
+                                              Вопрос: {question}
+                                              Ответ:''')
     parser = StrOutputParser()
     llm_chain = prompt | llm | parser
     for question in questions:
@@ -179,6 +178,7 @@ def extract_questions(text):
     return crop_questions(answer)
 
 
+# Функция для генерации соли
 def generate_salt():
     alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     chars = []
@@ -189,6 +189,7 @@ def generate_salt():
     return "".join(chars)
 
 
+# Функция проверки пароля
 def check_password(password):
     val = True
     if len(password) < 8 or len(password) > 24:
