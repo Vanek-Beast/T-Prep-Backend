@@ -31,7 +31,8 @@ urlpatterns = [
     path('api/v1/users/register/', UserCreateView.as_view(), name='user-create'),
     path('api/v1/users/auth/<str:user_name>/<str:user_password>/', UserAuthView.as_view(), name='user-auth'),
     path('api/v1/users/logout/', UserLogoutView.as_view(), name='user-auth'),
-    path('api/v1/users/segments/update-status/<int:segment_id>/', SegmentUpdateStatusView.as_view(), name='segment-update')
+    path('api/v1/users/segments/update-status/<int:segment_id>/', SegmentUpdateStatusView.as_view(), name='segment-update'),
+    path('api/v1/users/segments/<int:segment_id>/change-answer/', QuestionUpdateView.as_view(), name='change-question'),
 ]
 
 if settings.DEBUG:
