@@ -197,3 +197,18 @@ def check_password(password):
         val = False
 
     return val
+
+
+def send_notification(token, title, body):
+    message = messaging.Message(
+        notification=messaging.Notification(
+            title=title,
+            body=body,
+        ),
+        token=fcm_token,
+    )
+    try:
+        response = messaging.send(message)
+        print(f"Уведомление отправлено успешно: {response}")
+    except Exception as e:
+        print(f"Ошибка отправки уведомления: {e}")

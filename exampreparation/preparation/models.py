@@ -6,7 +6,6 @@ class User(models.Model):
     user_name = models.CharField(max_length=100)
     user_password = models.CharField(max_length=256)
     salt = models.CharField(max_length=256)
-    fcm_token = models.CharField(max_length=256)
 
     def __str__(self):
         return self.user_name
@@ -27,3 +26,8 @@ class Segment(models.Model):
     subject_id = models.ForeignKey('Subject', on_delete=models.CASCADE)
     status_segment = models.IntegerField()
     next_review_date = models.DateTimeField(auto_now=True)
+
+
+class FCMTokens(models.Model):
+    token = models.CharField(max_length=255)
+    user_id = models.ForeignKey('User', on_delete=models.CASCADE)
