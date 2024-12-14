@@ -1,6 +1,6 @@
 from rest_framework.serializers import *
 
-from preparation.models import Subject, Segment, User
+from preparation.models import *
 
 
 class SubjectCreateSerializer(ModelSerializer):
@@ -50,3 +50,8 @@ class UserGetSerializer(ModelSerializer):
         model = User
         fields = "__all__"
 
+
+class FCMTokenSerializer(ModelSerializer):
+    class Meta:
+        model = FCMTokens
+        fields = "__all__"

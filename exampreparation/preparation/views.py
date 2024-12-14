@@ -1,5 +1,6 @@
 import hashlib
-from pyfcm import FCMNotification
+import firebase_admin
+from firebase_admin import messaging, credentials
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
@@ -8,6 +9,7 @@ from .serializers import *
 from .models import *
 from .utils import *
 import os
+import schedule
 
 
 class SubjectCreateView(APIView):  # Представление для добавления предмета
@@ -70,9 +72,13 @@ class SegmentListView(APIView):  # Представление для получ�
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class SegmentUpdateStatusView(APIView):  # Представление обновления статуса сегмента
-    def put(self, request, segment_id):
+class SegmentUpdateStatusView(APIView):
+    def put(self, request, segment_id, user_id):
+        cred = credentials.Certificate("t-prep-mobile-firebase-adminsdk.json")
+        firebase_admin.initialize_app(cred)
         segments = Segment.objects.get(id=segment_id)
+        tokens = FCMTokens.objects.filter(user_id=user_id)
+        tokens_serializer = FCMTokenSerializer(tokens, many=True)
         serializer = SegmentListSerializer(segments)
         status_segment = serializer.data['status_segment']
         status_segment = status_segment + 1
@@ -80,6 +86,7 @@ class SegmentUpdateStatusView(APIView):  # Представление обнов
         serializer_save = SegmentListSerializer(segments, data=data_segment, partial=True)
         if serializer_save.is_valid():
             serializer_save.save()
+            schedule.every().day.at("18:40").do(send_notification(tokens_serializer.data[0]['token'], "Пора повторять", "Иди повторяй сучка"))
             return Response(serializer_save.data, status=status.HTTP_200_OK)
         return Response({"error": "Недопустимый параметр!"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -93,18 +100,29 @@ class UserCreateView(APIView):  # Представление для регист
             password = data['user_password']
             if check_password(password):
                 password = hashlib.sha512(password.encode() + salt.encode()).hexdigest()
-                print(password)
-                data_user = {"user_name": data['user_name'], "user_password": str(password), "salt": salt,
-                             "fcm_token": "fcmtoken"}
+                data_user = {"user_name": data['user_name'], "user_password": str(password), "salt": salt}
                 serializer = UserCreateSerializer(data=data_user)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                return Response({"id": serializer.data["id"]}, status=status.HTTP_201_CREATED)
+                return Response({"id": serializer.data["user_name"]}, status=status.HTTP_201_CREATED)
             else:
                 return Response({"Error": "Пароль не соответствует требованиям!"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"Error": "Пользователь с таким именем уже существует!"}, status=status.HTTP_409_CONFLICT)
 
+
+class TokenAddView(APIView):
+    def post(self, request):
+        data = request.data
+        token = FCMTokens.objects.filter(token=data['token']).exists()
+        if not token:
+            data_token = {"token": data['token'], "user_id": data["user_id"]}
+            serializer_token = FCMTokenSerializer(data=data_token)
+            serializer_token.is_valid()
+            serializer_token.save()
+            return Response({"token": data_token["token"]}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"Error": "Такой токен уже существует!"}, status=status.HTTP_409_CONFLICT)
 
 class UserAuthView(APIView):  # Представление для авторизации
     def get(self, request, user_name, user_password):
@@ -116,9 +134,9 @@ class UserAuthView(APIView):  # Представление для авториз
             password = user_password
             hash_password = str(hashlib.sha512(password.encode() + salt.encode()).hexdigest())
             if hash_password == serializer.data[0]['user_password']:
-                request.session['user'] = serializer.data
+                request.session[f"{serializer.data[0]['id']}"] = serializer.data
                 return Response(
-                    {"id": request.session['user'][0]['id'], "login": request.session['user'][0]['user_name']},
+                    {"id": request.session[f"{serializer.data[0]['id']}"][0]['id'], "login": request.session[f"{serializer.data[0]['id']}"][0]['user_name']},
                     status=status.HTTP_200_OK)
             else:
                 return Response({"Error": "Пароль неверный!"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -126,10 +144,11 @@ class UserAuthView(APIView):  # Представление для авториз
             return Response({"Error": "Такого пользователя нет!"}, status=status.HTTP_404_NOT_FOUND)
 
 
-class UserLogoutView(APIView):  # Представление для выхода из сеанса
-    def post(self, request):
-        if 'user' in request.session:
-            del request.session['user']
+
+class UserLogoutView(APIView):
+    def post(self, request, user_id):
+        if f'{user_id}' in request.session:
+            del request.session[f'{user_id}']
             return Response({"Answer": "Вы вышли из системы!"}, status=status.HTTP_200_OK)
         else:
             return Response({"Error": "Вы еще не авторизовались!"}, status=status.HTTP_404_NOT_FOUND)
