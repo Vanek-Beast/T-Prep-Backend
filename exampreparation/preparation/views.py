@@ -1,4 +1,3 @@
-import json
 import hashlib
 import firebase_admin
 from firebase_admin import messaging, credentials
@@ -15,7 +14,7 @@ import schedule
 
 session = SessionStore()
 
-class SubjectCreateView(APIView):
+class SubjectCreateView(APIView):  # Представление для добавления предмета
     def post(self, request, user_id):
         data = request.data
         data["user_id"] = user_id
@@ -49,9 +48,9 @@ class SubjectCreateView(APIView):
         serializer_subject.save()
 
         keys = list(questions)
+        # Разбиваем на сегменты
         for i in range(0, len(keys), 5):
             questions_load = {k: questions[k] for k in keys[i: i + 5]}
-            questions_load = json.dumps(questions_load)
             data_segment = {"questions": questions_load, "subject_id": serializer_subject.data["id"],
                             "status_segment": 0}
             serializer_segment = SegmentCreateSerializer(data=data_segment)
@@ -61,15 +60,14 @@ class SubjectCreateView(APIView):
                         status=status.HTTP_201_CREATED)
 
 
-class SubjectListView(APIView):
+class SubjectListView(APIView):  # Представление для получения списка предметов
     def get(self, request, user_id):
-        # Получаем список предметов для конкретного пользователя
         subjects = Subject.objects.filter(user_id=user_id)
         serializer = SubjectListSerializer(subjects, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class SegmentListView(APIView):
+class SegmentListView(APIView):  # Представление для получения списка сегментов
     def get(self, request, subject_id):
         segments = Segment.objects.filter(subject_id=subject_id)
         serializer = SegmentListSerializer(segments, many=True)
@@ -80,7 +78,6 @@ class SegmentUpdateStatusView(APIView):
     def put(self, request, segment_id, user_id):
         cred = credentials.Certificate("t-prep-mobile-firebase-adminsdk.json")
         firebase_admin.initialize_app(cred)
-
         segments = Segment.objects.get(id=segment_id)
         tokens = FCMTokens.objects.filter(user_id=user_id)
         tokens_serializer = FCMTokenSerializer(tokens, many=True)
@@ -96,7 +93,7 @@ class SegmentUpdateStatusView(APIView):
         return Response({"error": "Недопустимый параметр!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserCreateView(APIView):
+class UserCreateView(APIView):  # Представление для регистрации
     def post(self, request):
         data = request.data
         user = User.objects.filter(user_name=data['user_name']).exists()
@@ -129,8 +126,7 @@ class TokenAddView(APIView):
         else:
             return Response({"Error": "Такой токен уже существует!"}, status=status.HTTP_409_CONFLICT)
 
-
-class UserAuthView(APIView):
+class UserAuthView(APIView):  # Представление для авторизации
     def get(self, request, user_name, user_password):
         user = User.objects.filter(user_name=user_name).exists()
         if user:
@@ -150,6 +146,7 @@ class UserAuthView(APIView):
             return Response({"Error": "Такого пользователя нет!"}, status=status.HTTP_404_NOT_FOUND)
 
 
+
 class UserLogoutView(APIView):
     def post(self, request, user_id):
         if f'{user_id}' in session:
@@ -159,8 +156,36 @@ class UserLogoutView(APIView):
             return Response({"Error": "Вы еще не авторизовались!"}, status=status.HTTP_404_NOT_FOUND)
 
 
-class SubjectDeleteView(APIView):
+class SubjectDeleteView(APIView):  # Представление для удаления предмета
     def delete(self, request, user_id, subject_id):
         subject = get_object_or_404(Subject, id=subject_id, user_id=user_id)
         subject.delete()
         return Response(status=status.HTTP_202_ACCEPTED)
+
+
+class QuestionUpdateView(APIView):  # Представление для изменения ответа на вопрос
+    def patch(self, request, segment_id):
+        # Получаем сегмент
+        segment = get_object_or_404(Segment, id=segment_id)
+
+        # Загружаем вопросы из сегмента
+        serializer = SegmentListSerializer(segment)
+        quest_dict = serializer.data["questions"]
+        # Проверяем наличие вопроса в запросе
+        if "question" in request.data and "answer" in request.data:
+            question_key = request.data["question"]
+
+            # Обновляем ответ на указанный вопрос
+            if question_key in quest_dict:
+                quest_dict[question_key] = request.data["answer"]
+
+                # Сохраняем измененный словарь вопросов обратно в сегмент
+                segment.questions = quest_dict
+                segment.save()
+
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({"error": f"Вопрос '{question_key}' не найден."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "Не указаны необходимые параметры 'question' и/или 'answer'."},
+                            status=status.HTTP_400_BAD_REQUEST)
