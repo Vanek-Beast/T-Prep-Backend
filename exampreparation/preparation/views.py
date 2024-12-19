@@ -5,12 +5,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.contrib.sessions.backends.db import SessionStore
 from .serializers import *
 from .models import *
 from .utils import *
 import os
 import schedule
 
+session = SessionStore()
 
 class SubjectCreateView(APIView):  # Представление для добавления предмета
     def post(self, request, user_id):
@@ -134,9 +136,9 @@ class UserAuthView(APIView):  # Представление для авториз
             password = user_password
             hash_password = str(hashlib.sha512(password.encode() + salt.encode()).hexdigest())
             if hash_password == serializer.data[0]['user_password']:
-                request.session[f"{serializer.data[0]['id']}"] = serializer.data
+                session[f"{serializer.data[0]['id']}"] = serializer.data
                 return Response(
-                    {"id": request.session[f"{serializer.data[0]['id']}"][0]['id'], "login": request.session[f"{serializer.data[0]['id']}"][0]['user_name']},
+                    {"id": session[f"{serializer.data[0]['id']}"][0]['id'], "login": session[f"{serializer.data[0]['id']}"][0]['user_name']},
                     status=status.HTTP_200_OK)
             else:
                 return Response({"Error": "Пароль неверный!"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -147,8 +149,8 @@ class UserAuthView(APIView):  # Представление для авториз
 
 class UserLogoutView(APIView):
     def post(self, request, user_id):
-        if f'{user_id}' in request.session:
-            del request.session[f'{user_id}']
+        if f'{user_id}' in session:
+            del session[f'{user_id}']
             return Response({"Answer": "Вы вышли из системы!"}, status=status.HTTP_200_OK)
         else:
             return Response({"Error": "Вы еще не авторизовались!"}, status=status.HTTP_404_NOT_FOUND)
