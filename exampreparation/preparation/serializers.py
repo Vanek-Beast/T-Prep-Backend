@@ -36,7 +36,7 @@ class UserCreateSerializer(ModelSerializer):
 class SegmentUpdateSerializer(ModelSerializer):
     class Meta:
         model = Segment
-        fields = ['id', 'status_segment', 'next_review_date']
+        fields = ['status_segment', 'next_review_date']
 
 
 class SegmentDeleteSerializer(ModelSerializer):
@@ -48,10 +48,4 @@ class SegmentDeleteSerializer(ModelSerializer):
 class UserGetSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
-
-
-class FCMTokenSerializer(ModelSerializer):
-    class Meta:
-        model = FCMTokens
         fields = "__all__"
