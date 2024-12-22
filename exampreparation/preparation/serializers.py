@@ -18,13 +18,13 @@ class SegmentCreateSerializer(ModelSerializer):
 class SubjectListSerializer(ModelSerializer):
     class Meta:
         model = Subject
-        fields = ['id', 'name', 'time', 'status']
+        fields = "__all__"
 
 
 class SegmentListSerializer(ModelSerializer):
     class Meta:
         model = Segment
-        fields = ['id', 'questions', 'subject_id', 'status_segment', 'next_review_date']
+        fields = "__all__"
 
 
 class UserCreateSerializer(ModelSerializer):
