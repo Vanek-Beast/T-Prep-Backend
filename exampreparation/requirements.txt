@@ -7,5 +7,3 @@ opencv-python
 python-docx
 pypdf2
 numpy
-firebase-admin
-schedule

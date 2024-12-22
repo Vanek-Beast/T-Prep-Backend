@@ -14,7 +14,6 @@ class User(models.Model):
 class Subject(models.Model):
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    time = models.DateTimeField(auto_now=True)
     status = models.BooleanField(default=False)
 
     def __str__(self):
@@ -26,8 +25,3 @@ class Segment(models.Model):
     subject_id = models.ForeignKey('Subject', on_delete=models.CASCADE)
     status_segment = models.IntegerField()
     next_review_date = models.DateTimeField(auto_now=True)
-
-
-class FCMTokens(models.Model):
-    token = models.CharField(max_length=255)
-    user_id = models.ForeignKey('User', on_delete=models.CASCADE)

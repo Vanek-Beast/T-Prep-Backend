@@ -1,16 +1,14 @@
 import hashlib
-import firebase_admin
-from firebase_admin import messaging, credentials
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from datetime import datetime, timedelta
 from django.contrib.sessions.backends.db import SessionStore
 from .serializers import *
 from .models import *
 from .utils import *
 import os
-import schedule
 
 session = SessionStore()
 
@@ -75,21 +73,22 @@ class SegmentListView(APIView):  # Представление для получ�
 
 
 class SegmentUpdateStatusView(APIView):
-    def put(self, request, segment_id, user_id):
-        cred = credentials.Certificate("t-prep-mobile-firebase-adminsdk.json")
-        firebase_admin.initialize_app(cred)
+    def put(self, request, segment_id):
+        #получаем сегменты
         segments = Segment.objects.get(id=segment_id)
-        tokens = FCMTokens.objects.filter(user_id=user_id)
-        tokens_serializer = FCMTokenSerializer(tokens, many=True)
         serializer = SegmentListSerializer(segments)
+
+        #увеличиваем status на единицу
+        date_segment = str(serializer.data['next_review_date']).split('.')[0].replace('T', ' ')
+        format_date = "%Y-%m-%d %H:%M:%S"
+        date = datetime.strptime(date_segment, format_date)
         status_segment = serializer.data['status_segment']
         status_segment = status_segment + 1
         data_segment = {"status_segment": status_segment}
-        serializer_save = SegmentListSerializer(segments, data=data_segment, partial=True)
+        serializer_save = SegmentUpdateSerializer(segments, data=data_segment)
         if serializer_save.is_valid():
             serializer_save.save()
-            schedule.every().day.at("18:40").do(send_notification(tokens_serializer.data[0]['token'], "Пора повторять", "Иди повторяй сучка"))
-            return Response(serializer_save.data, status=status.HTTP_200_OK)
+            return Response({"status_segment: ": status_segment, "date: ": date}, status=status.HTTP_200_OK)
         return Response({"error": "Недопустимый параметр!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -111,20 +110,6 @@ class UserCreateView(APIView):  # Представление для регист
                 return Response({"Error": "Пароль не соответствует требованиям!"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"Error": "Пользователь с таким именем уже существует!"}, status=status.HTTP_409_CONFLICT)
-
-
-class TokenAddView(APIView):
-    def post(self, request):
-        data = request.data
-        token = FCMTokens.objects.filter(token=data['token']).exists()
-        if not token:
-            data_token = {"token": data['token'], "user_id": data["user_id"]}
-            serializer_token = FCMTokenSerializer(data=data_token)
-            serializer_token.is_valid()
-            serializer_token.save()
-            return Response({"token": data_token["token"]}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({"Error": "Такой токен уже существует!"}, status=status.HTTP_409_CONFLICT)
 
 class UserAuthView(APIView):  # Представление для авторизации
     def get(self, request, user_name, user_password):
